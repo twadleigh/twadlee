@@ -56,22 +56,22 @@
 
 #define LAYOUT( \
     k00, k01, k02, k03, k04, k05, k06, k07, k50, k51, k52, k53, k54, k55, k56, k57, \
-      k10, k11, k13, k14, k15, k16, k17, k60, k61, k62, k63, k64, k65, k66, k67, \
-        k20, k21, k23, k24, k25, k27, /**/ k70, k71, k72, k73, k74, k75, k77, \
-          k30, k32, k33, k34, k35, k36, k37, k81, k82, k83, k84, k85, k86, \
-            k40, k41, k43, k44, k46, k47, k91, k92, k94, k95, k96, k97 \
+      k10, k12, k13, k14, k15, k16, k17, k60, k61, k62, k63, k64, k65, k66, k67, \
+        k20, k22, k23, k24, k25, k27, /**/ k70, k71, k72, k73, k74, k75, k76, \
+          k30, k32, k33, k34, k35, k36, k37, k80, k81, k82, k84, k85, k86, \
+            k40, k41, k42, k44, k46, k47, k90, k91, k94, k95, k96, k97 \
 ) \
 { \
     {k00, k01, k02, k03, k04, k05, k06, k07}, \
-    {k10, k11, XXX, k13, k14, k15, k16, k17}, \
-    {k20, k21, XXX, k23, k24, k25, XXX, k27}, \
+    {k10, XXX, k12, k13, k14, k15, k16, k17}, \
+    {k20, XXX, k22, k23, k24, k25, XXX, k27}, \
     {k30, XXX, k32, k33, k34, k35, k36, k37}, \
-    {k40, k41, XXX, k43, k44, XXX, k46, k47}, \
+    {k40, k41, k42, XXX, k44, XXX, k46, k47}, \
     {k50, k51, k52, k53, k54, k55, k56, k57}, \
     {k60, k61, k62, k63, k64, k65, k66, k67}, \
-    {k70, k71, k72, k73, k74, k75, XXX, k77}, \
-    {XXX, k81, k82, k83, k84, k85, k86, XXX}, \
-    {XXX, k91, k92, XXX, k94, k95, k96, k97} \
+    {k70, k71, k72, k73, k74, k75, k76, XXX}, \
+    {k80, k81, k82, XXX, k84, k85, k86, XXX}, \
+    {k90, k91, XXX, XXX, k94, k95, k96, k97} \
 }
 
 namespace Matrix {
@@ -192,7 +192,7 @@ namespace Matrix {
         if (gKeyEventQueue.isFull()) {
           ProcessKeyEvent(false);
         }
-        //gKeyEventQueue.push(&key_event);
+        gKeyEventQueue.push(&key_event);
         INFO("key event: (%u, %u) %s", gCurrentRow, c, key_event.IsDown ? "DOWN" : "UP");
       }
     }
