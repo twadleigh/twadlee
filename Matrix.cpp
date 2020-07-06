@@ -95,63 +95,14 @@ namespace Matrix {
                _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____,
                   _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____)};
 
-  uint8_t gCurrentLayer = 0;
-  void ProcessKeyPress(uint16_t key_code) {
-    switch(key_code >> 8) {
-      case 0xFF:  // special key
-        switch(key_code) {
-          case K_MS1:
-            Mouse.press(1);
-            break;
-          case K_MS2:
-            Mouse.press(2);
-            break;
-          case K_MS3:
-            Keyboard.releaseAll();
-            gCurrentLayer = 1;
-            Mouse.press(3);
-            break;
-          case K_RST:
-            _reboot_Teensyduino_();
-            break;
-          default:
-            ERROR("Unrecognized special keycode in key press event");
-        }
-      default:
-        Keyboard.press(key_code);
-    }
-  }
-
-  void ProcessKeyRelease(uint16_t key_code) {
-    switch(key_code >> 8) {
-      case 0xFF:  // special key
-        switch(key_code) {
-          case K_MS1:
-            Mouse.release(1);
-          case K_MS2:
-            Mouse.release(2);
-          case K_MS3:
-            Keyboard.releaseAll();
-            gCurrentLayer = 0;
-            Mouse.release(3);
-          case K_RST:
-            break;
-          default:
-            ERROR("Unrecognized special keycode in key release event");
-        }
-      default:
-        Keyboard.release(key_code);
-    }
-  }
-
   struct KeyEvent {
     uint8_t Row;
     uint8_t Col;
     bool    IsDown;
   };
 
+  uint8_t gCurrentLayer = 0;
   static Queue gKeyEventQueue(sizeof(KeyEvent));
-
   static void ProcessKeyEvent(bool check_for_empty = true) {
     KeyEvent e;
     if (check_for_empty && gKeyEventQueue.isEmpty()) return;
@@ -172,41 +123,54 @@ namespace Matrix {
       ERROR("can't have transparency in bottom layer");
       return;
     } else if (e.IsDown) {
-      ProcessKeyPress(key_code);
+      switch(key_code >> 8) {
+        case 0xFF:  // special key
+          switch(key_code) {
+            case K_MS1:
+              Mouse.press(1);
+              break;
+            case K_MS2:
+              Mouse.press(2);
+              break;
+            case K_MS3:
+              Keyboard.releaseAll();
+              gCurrentLayer = 1;
+              Mouse.press(4);
+              break;
+            case K_RST:
+              _reboot_Teensyduino_();
+              break;
+            default:
+              ERROR("Unrecognized special keycode in key press event");
+          }
+        default:
+          Keyboard.press(key_code);
+      }
     } else {
-      ProcessKeyRelease(key_code);
+      switch(key_code >> 8) {
+        case 0xFF:  // special key
+          switch(key_code) {
+            case K_MS1:
+              Mouse.release(1);
+            case K_MS2:
+              Mouse.release(2);
+            case K_MS3:
+              Keyboard.releaseAll();
+              gCurrentLayer = 0;
+              Mouse.release(4);
+            case K_RST:
+              break;
+            default:
+              ERROR("Unrecognized special keycode in key release event");
+          }
+        default:
+          Keyboard.release(key_code);
+      }
     }
   }
 
   static const uint16_t kDebouncingTimeMs = 5;
   static Bounce gDebouncerMatrix[kNumRows][kNumCols];
-  uint8_t gCurrentRow = 0;
-  void ScanRow() {
-    KeyEvent key_event;
-    key_event.Row = gCurrentRow;
-    for (uint8_t c = 0; c < kNumCols; ++c) {
-      Bounce& debouncer = gDebouncerMatrix[gCurrentRow][c];
-      if(debouncer.update()) {
-        key_event.Col = c;
-        key_event.IsDown = debouncer.read() == LOW;
-        if (gKeyEventQueue.isFull()) {
-          ProcessKeyEvent(false);
-        }
-        gKeyEventQueue.push(&key_event);
-        INFO("key event: (%u, %u) %s", gCurrentRow, c, key_event.IsDown ? "DOWN" : "UP");
-      }
-    }
-    // restore the row pin state
-    pinMode(kRowPins[gCurrentRow], INPUT_PULLUP);
-    // set pin state for the next row
-    gCurrentRow = (gCurrentRow + 1) % kNumRows;
-    uint8_t row_pin = kRowPins[gCurrentRow];
-    pinMode(row_pin, OUTPUT);
-    digitalWrite(row_pin, LOW);
-  }
-
-  IntervalTimer gRowScanTimer;
-  uint8_t kRowScanIntervalUs = 100;
   void Init() {
     // initialize the pin states
     for (uint8_t i = 0; i < kNumRows; ++i) {
@@ -220,13 +184,43 @@ namespace Matrix {
       for (uint8_t c = 0; c < kNumCols; ++c) {
         Bounce& debouncer = gDebouncerMatrix[r][c];
         debouncer.attach(kColPins[c]);
-        debouncer.interval(kRowScanIntervalUs);
+        debouncer.interval(kDebouncingTimeMs);
       }
     }
-    gRowScanTimer.begin(ScanRow, kRowScanIntervalUs);
   }
 
   void Scan() {
-    ProcessKeyEvent();
+    KeyEvent key_event;
+    for (uint8_t r = 0; r < kNumRows; ++r) {
+      // set the row pin low
+      uint8_t pin = kRowPins[r];
+      pinMode(pin, OUTPUT);
+      digitalWrite(pin, LOW);
+
+      // process an event while waiting 1 us for the pins to settle
+      uint64_t nowUs = micros();
+      ProcessKeyEvent();
+      if (micros() == nowUs) {
+        delayMicroseconds(1);
+      }
+
+      // scan columns
+      key_event.Row = r;
+      for (uint8_t c = 0; c < kNumCols; ++c) {
+        Bounce& debouncer = gDebouncerMatrix[r][c];
+        if(debouncer.update()) {
+          key_event.Col = c;
+          key_event.IsDown = debouncer.read() == LOW;
+          if (gKeyEventQueue.isFull()) {
+            ProcessKeyEvent(false);
+          }
+          gKeyEventQueue.push(&key_event);
+          INFO("key event: (%u, %u) %s", r, c, key_event.IsDown ? "DOWN" : "UP");
+        }
+      }
+
+      // restore the row pin state to input
+      pinMode(pin, INPUT_PULLUP);
+    }
   }
 }  // namespace Matrix
