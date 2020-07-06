@@ -1,11 +1,8 @@
 #include "Matrix.h"
 
 #include <cstdint>
-#include <cstdio>
 
 #include <Arduino.h>
-#include <Bounce2.h>
-#include <cppQueue.h>
 
 #include "Logging.h"
 
@@ -95,20 +92,52 @@ namespace Matrix {
                _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____,
                   _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____)};
 
-  struct KeyEvent {
-    uint8_t Row;
-    uint8_t Col;
-    bool    IsDown;
+  static const uint16_t kDebouncingTimeMs = 5;
+  struct Debouncer {
+    uint8_t Pin;
+    uint64_t TimeDoneDebouncingMs;
+
+    Debouncer() : Pin(0), TimeDoneDebouncingMs(0) {}
+
+    void AttachToPin(uint8_t pin) {
+      Pin = pin;
+    }
+
+    void Reset() {
+      TimeDoneDebouncingMs = 0;
+    }
+
+    // 0: no change, 1: press, 2: release
+    uint8_t Update() {
+      if(LOW == digitalRead(Pin)) {
+        if (0 == TimeDoneDebouncingMs) {
+          TimeDoneDebouncingMs = millis() + kDebouncingTimeMs;
+          return 1;
+        }
+      } else {
+        if (TimeDoneDebouncingMs > 0 && millis() >= TimeDoneDebouncingMs) {
+          Reset();
+          return 2;
+        }
+      }
+      return 0;
+    }
   };
 
+  static Debouncer gDebouncerMatrix[kNumRows][kNumCols];
+  void ResetMatrix() {
+    Keyboard.releaseAll();
+    for (uint8_t r = 0; r < kNumRows; ++r) {
+      for (uint8_t c = 0; c < kNumCols; ++c) {
+        gDebouncerMatrix[r][c].Reset();
+      }
+    }
+  }
+
   uint8_t gCurrentLayer = 0;
-  static Queue gKeyEventQueue(sizeof(KeyEvent));
-  static void ProcessKeyEvent(bool check_for_empty = true) {
-    KeyEvent e;
-    if (check_for_empty && gKeyEventQueue.isEmpty()) return;
-    gKeyEventQueue.pop(&e);
-    uint8_t layer = gCurrentLayer;
-    uint16_t key_code = kLayout[layer][e.Row][e.Col];
+  static void ProcessKeyEvent(uint8_t row, uint8_t col, bool is_down, uint8_t layer = gCurrentLayer) {
+    INFO("key event: (%u, %u) %s", row, col, is_down ? "DOWN" : "UP");
+    uint16_t key_code = kLayout[layer][row][col];
 
     // process some special key codes
     if (XXX == key_code) return;  // null event
@@ -116,13 +145,13 @@ namespace Matrix {
     // transparency: select key from below
     while(_____ == key_code && layer > 0) {
       --layer;
-      key_code = kLayout[layer][e.Row][e.Col];
+      key_code = kLayout[layer][row][col];
     }
 
     if (_____ == key_code) {
       ERROR("can't have transparency in bottom layer");
       return;
-    } else if (e.IsDown) {
+    } else if (is_down) {
       switch(key_code >> 8) {
         case 0xFF:  // special key
           switch(key_code) {
@@ -133,9 +162,8 @@ namespace Matrix {
               Mouse.press(2);
               break;
             case K_MS3:
-              Keyboard.releaseAll();
               gCurrentLayer = 1;
-              Mouse.press(4);
+              //Mouse.press(4);
               break;
             case K_RST:
               _reboot_Teensyduino_();
@@ -155,9 +183,8 @@ namespace Matrix {
             case K_MS2:
               Mouse.release(2);
             case K_MS3:
-              Keyboard.releaseAll();
               gCurrentLayer = 0;
-              Mouse.release(4);
+              //Mouse.release(4);
             case K_RST:
               break;
             default:
@@ -169,8 +196,6 @@ namespace Matrix {
     }
   }
 
-  static const uint16_t kDebouncingTimeMs = 5;
-  static Bounce gDebouncerMatrix[kNumRows][kNumCols];
   void Init() {
     // initialize the pin states
     for (uint8_t i = 0; i < kNumRows; ++i) {
@@ -182,40 +207,29 @@ namespace Matrix {
     // initialize the debouncer matrix
     for (uint8_t r = 0; r < kNumRows; ++r) {
       for (uint8_t c = 0; c < kNumCols; ++c) {
-        Bounce& debouncer = gDebouncerMatrix[r][c];
-        debouncer.attach(kColPins[c]);
-        debouncer.interval(kDebouncingTimeMs);
+        gDebouncerMatrix[r][c].AttachToPin(kColPins[c]);
       }
     }
   }
 
   void Scan() {
-    KeyEvent key_event;
     for (uint8_t r = 0; r < kNumRows; ++r) {
       // set the row pin low
       uint8_t pin = kRowPins[r];
       pinMode(pin, OUTPUT);
       digitalWrite(pin, LOW);
-
-      // process an event while waiting 1 us for the pins to settle
-      uint64_t nowUs = micros();
-      ProcessKeyEvent();
-      if (micros() == nowUs) {
-        delayMicroseconds(1);
-      }
+      delayMicroseconds(1);
 
       // scan columns
-      key_event.Row = r;
       for (uint8_t c = 0; c < kNumCols; ++c) {
-        Bounce& debouncer = gDebouncerMatrix[r][c];
-        if(debouncer.update()) {
-          key_event.Col = c;
-          key_event.IsDown = debouncer.read() == LOW;
-          if (gKeyEventQueue.isFull()) {
-            ProcessKeyEvent(false);
-          }
-          gKeyEventQueue.push(&key_event);
-          INFO("key event: (%u, %u) %s", r, c, key_event.IsDown ? "DOWN" : "UP");
+        uint8_t result = gDebouncerMatrix[r][c].Update();
+        if (0 == result) continue;
+        if (1 == result) {
+          ProcessKeyEvent(r, c, true);
+        } else if (2 == result) {
+          ProcessKeyEvent(r, c, false);
+        } else {
+          ERROR("unexpected result from debouncer: %u", result);
         }
       }
 

@@ -8,7 +8,6 @@
 namespace Leds {
   const uint8_t kNumLedPins = 5;
   const uint8_t kLedPins[] = {5, 20, 21, 22, 23};
-  const uint8_t kMaxBrightnessLevel = 255;
 
   uint8_t gBrightnessLevel = 32;
 
@@ -23,9 +22,6 @@ namespace Leds {
   }
 
   void SetBrightnessLevel(uint8_t level) {
-    if (level > kMaxBrightnessLevel) {
-      level = kMaxBrightnessLevel;
-    }
     gBrightnessLevel = level;
     UpdateBrightnessLevel();
   }
@@ -38,6 +34,5 @@ namespace Leds {
     UpdateBrightnessLevel();
   }
 
-  void Scan() {
-  }
+  void Scan() {}
 }  // namespace Leds
