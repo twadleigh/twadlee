@@ -31,7 +31,8 @@ namespace Leds {
       uint8_t pin = kLedPins[i];
       pinMode(pin, OUTPUT);
     }
-    UpdateBrightnessLevel();
+//    UpdateBrightnessLevel();
+    SetBrightnessLevel(0);
   }
 
   void Scan() {}

@@ -47,9 +47,7 @@
 #define _____ 0xFF00  // transparent - look in lower layer for code
 #define K_MS1 0xFF01  // mouse 1
 #define K_MS2 0xFF02  // mouse 2
-#define K_MS3 0xFF03  // mouse 3 (doubles as function key)
-#define K_RST 0xFF04  // reset - bootloader mode
-#define K_DBG 0xFF05  // toggle chatty serial output
+#define K_FNC 0xFF03  // raise to 2nd layer
 
 #define LAYOUT( \
     k00, k01, k02, k03, k04, k05, k06, k07, k50, k51, k52, k53, k54, k55, k56, k57, \
@@ -84,7 +82,7 @@ namespace Matrix {
          K_TAB, KEY_Q, KEY_W, KEY_E, KEY_R, KEY_T, MLALT, KEY_Y, KEY_U, KEY_I, KEY_O, KEY_P, K_LBR, K_RBR, K_BSL,
             K_ESC, KEY_A, KEY_S, KEY_D, KEY_F, KEY_G, /****/ KEY_H, KEY_J, KEY_K, KEY_L, K_SMC, K_QUT, K_ENT,
                MLSFT, KEY_Z, KEY_X, KEY_C, KEY_V, KEY_B, MLCTL, KEY_N, KEY_M, K_CMA, K_PRD, K_SLH, MRSFT,
-                  MLCTL, MLGUI, MLALT, K_BSP, K_MS1, K_MS3, K_MS2, K_SPC, MRALT, K_MNU, MRGUI, MRCTL),
+                  MLCTL, MLGUI, MLALT, K_BSP, K_MS1, K_FNC, K_MS2, K_SPC, MRALT, K_MNU, MRGUI, MRCTL),
     LAYOUT(
       _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____,
          _____, _____, _____, _____, _____, _____, _____, K_HOM, K_PDN, K_PUP, K_END, _____, _____, _____, _____,
@@ -93,11 +91,12 @@ namespace Matrix {
                   _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____, _____)};
 
   static const uint16_t kDebouncingTimeMs = 5;
-  struct Debouncer {
+  struct KeyState {
     uint8_t Pin;
+    uint16_t LastCode;
     uint64_t TimeDoneDebouncingMs;
 
-    Debouncer() : Pin(0), TimeDoneDebouncingMs(0) {}
+    KeyState() : Pin(0), LastCode(0), TimeDoneDebouncingMs(0) {}
 
     void AttachToPin(uint8_t pin) {
       Pin = pin;
@@ -105,6 +104,19 @@ namespace Matrix {
 
     void Reset() {
       TimeDoneDebouncingMs = 0;
+    }
+
+    void SetLastCode(uint16_t key_code) {
+      if (0 != LastCode) {
+        ERROR("Non-null last key code for key press event");
+      }
+      LastCode = key_code;
+    }
+
+    uint16_t ClearLastCode() {
+      uint16_t key_code = LastCode;
+      LastCode = 0;
+      return key_code;
     }
 
     // 0: no change, 1: press, 2: release
@@ -124,19 +136,10 @@ namespace Matrix {
     }
   };
 
-  static Debouncer gDebouncerMatrix[kNumRows][kNumCols];
-  void ResetMatrix() {
-    Keyboard.releaseAll();
-    for (uint8_t r = 0; r < kNumRows; ++r) {
-      for (uint8_t c = 0; c < kNumCols; ++c) {
-        gDebouncerMatrix[r][c].Reset();
-      }
-    }
-  }
-
   uint8_t gCurrentLayer = 0;
-  static void ProcessKeyEvent(uint8_t row, uint8_t col, bool is_down, uint8_t layer = gCurrentLayer) {
-    INFO("key event: (%u, %u) %s", row, col, is_down ? "DOWN" : "UP");
+  static KeyState gKeyStateMatrix[kNumRows][kNumCols];
+  static void ProcessKeyPressEvent(uint8_t row, uint8_t col, uint8_t layer = gCurrentLayer) {
+    INFO("key press event: (%u, %u)", row, col);
     uint16_t key_code = kLayout[layer][row][col];
 
     // process some special key codes
@@ -151,7 +154,8 @@ namespace Matrix {
     if (_____ == key_code) {
       ERROR("can't have transparency in bottom layer");
       return;
-    } else if (is_down) {
+    } else {
+      gKeyStateMatrix[row][col].SetLastCode(key_code);
       switch(key_code >> 8) {
         case 0xFF:  // special key
           switch(key_code) {
@@ -161,38 +165,39 @@ namespace Matrix {
             case K_MS2:
               Mouse.press(2);
               break;
-            case K_MS3:
+            case K_FNC:
               gCurrentLayer = 1;
               //Mouse.press(4);
-              break;
-            case K_RST:
-              _reboot_Teensyduino_();
               break;
             default:
               ERROR("Unrecognized special keycode in key press event");
           }
         default:
           Keyboard.press(key_code);
+          return;
       }
-    } else {
-      switch(key_code >> 8) {
-        case 0xFF:  // special key
-          switch(key_code) {
-            case K_MS1:
-              Mouse.release(1);
-            case K_MS2:
-              Mouse.release(2);
-            case K_MS3:
-              gCurrentLayer = 0;
-              //Mouse.release(4);
-            case K_RST:
-              break;
-            default:
-              ERROR("Unrecognized special keycode in key release event");
-          }
-        default:
-          Keyboard.release(key_code);
-      }
+    }
+  }
+
+  void ProcessKeyReleaseEvent(uint8_t row, uint8_t col) {
+    INFO("key release event: (%u, %u)", row, col);
+    uint16_t key_code = gKeyStateMatrix[row][col].ClearLastCode();
+    switch(key_code >> 8) {
+      case 0xFF:  // special key
+        switch(key_code) {
+          case K_MS1:
+            Mouse.release(1);
+          case K_MS2:
+            Mouse.release(2);
+          case K_FNC:
+            gCurrentLayer = 0;
+            //Mouse.release(4);
+          default:
+            ERROR("Unrecognized special keycode in key release event");
+        }
+      default:
+        Keyboard.release(key_code);
+        return;
     }
   }
 
@@ -207,27 +212,28 @@ namespace Matrix {
     // initialize the debouncer matrix
     for (uint8_t r = 0; r < kNumRows; ++r) {
       for (uint8_t c = 0; c < kNumCols; ++c) {
-        gDebouncerMatrix[r][c].AttachToPin(kColPins[c]);
+        gKeyStateMatrix[r][c].AttachToPin(kColPins[c]);
       }
     }
   }
 
   void Scan() {
     for (uint8_t r = 0; r < kNumRows; ++r) {
+      KeyState* keystate_row = gKeyStateMatrix[r];
       // set the row pin low
       uint8_t pin = kRowPins[r];
       pinMode(pin, OUTPUT);
       digitalWrite(pin, LOW);
-      delayMicroseconds(1);
+      delayMicroseconds(1);  // allow pin to settle
 
       // scan columns
       for (uint8_t c = 0; c < kNumCols; ++c) {
-        uint8_t result = gDebouncerMatrix[r][c].Update();
+        uint8_t result = keystate_row[c].Update();
         if (0 == result) continue;
         if (1 == result) {
-          ProcessKeyEvent(r, c, true);
+          ProcessKeyPressEvent(r, c);
         } else if (2 == result) {
-          ProcessKeyEvent(r, c, false);
+          ProcessKeyReleaseEvent(r, c);
         } else {
           ERROR("unexpected result from debouncer: %u", result);
         }
