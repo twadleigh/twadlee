@@ -4,8 +4,8 @@
 #include <cstdint>
 
 namespace Leds {
-  void Init();
-  void Scan();
+  void Setup();
+  void Loop();
 
   extern const uint8_t kMaxBrightnessLevel;
   uint8_t GetBrightnessLevel();

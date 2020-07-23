@@ -2,7 +2,7 @@
 #define __MATRIX_H_
 
 namespace Matrix {
-  void Init();
-  void Scan();
+  void Setup();
+  void Loop();
 }  // namespace Matrix
 #endif // __MATRIX_H_

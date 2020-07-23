@@ -4,8 +4,8 @@
 #include <Arduino.h>
 
 namespace Logging {
-  void Init();
-  void Scan();
+  void Setup();
+  void Loop();
 
   // not ISR-safe
   void Msg(const char* msg, ...);

@@ -4,13 +4,13 @@
 #include <cstdarg>
 
 namespace Logging {
-  void Init() {
+  void Setup() {
     Serial.begin(9600);
     delay(1000);
     INFO("Logging initialized");
   }
 
-  void Scan() {}
+  void Loop() {}
 
   static void vMsg(const char* format, va_list args) {
     char buf[2048];

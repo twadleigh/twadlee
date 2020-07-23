@@ -1,15 +1,18 @@
 #include "Leds.h"
 #include "Logging.h"
 #include "Matrix.h"
+#include "Thumbstick.h"
 
 void setup() {
-  Logging::Init();
-  Matrix::Init();
-  Leds::Init();
+  Logging::Setup();
+  Matrix::Setup();
+  Thumbstick::Setup();
+  Leds::Setup();
 }
 
 void loop() {
-  Logging::Scan();
-  Matrix::Scan();
-  Leds::Scan();
+  Logging::Loop();
+  Matrix::Loop();
+  Thumbstick::Loop();
+  Leds::Loop();
 }

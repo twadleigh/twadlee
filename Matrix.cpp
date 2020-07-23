@@ -9,26 +9,26 @@
 
 namespace Matrix {
   const uint8_t kNumLayers = 2;
-  const uint8_t kNumCols = 8;
-  static const uint8_t kColPins[] = {7, 6, 8, 26, 24, 4, 3, 2};
-  const uint8_t kNumRows = 10;
-  static const uint8_t kRowPins[] = {9, 10, 11, 12, 14, 27, 31, 28, 29, 30};
+  const uint8_t kNumCols = 16;
+  static const uint8_t kColPins[] = {0, 7, 6, 8, 28, 27, 4, 3, 2, 1, 0, 10, 20, 30, 40, 50};
+  const uint8_t kNumRows = 5;
+  static const uint8_t kRowPins[] = {9, 10, 11, 12, 14};
 
   const uint16_t kLayout[kNumLayers][kNumRows][kNumCols] = {
     LAYOUT(
-      TILDE, __1__, __2__, __3__, __4__, __5__, __6__, L_GUI, __7__, __8__, __9__, __0__, MINUS, EQUAL, WAKE_, SLEEP,
+      TILDE, __1__, __2__, __3__, __4__, __5__, __6__, L_GUI, __7__, __8__, __9__, __0__, MINUS, EQUAL, VOLUP, VOLDN,
          _TAB_, __Q__, __W__, __E__, __R__, __T__, L_ALT, __Y__, __U__, __I__, __O__, __P__, L_BRC, R_BRC, BK_SL,
             _ESC_, __A__, __S__, __D__, __F__, __G__, /****/ __H__, __J__, __K__, __L__, SEMIC, QUOTE, ENTER,
                L_SFT, __Z__, __X__, __C__, __V__, __B__, L_CTL, __N__, __M__, COMMA, PRIOD, SLASH, R_SFT,
                   L_CTL, L_GUI, L_ALT, BK_SP, MBTNL, ML(1), MBTNR, SPACE, R_ALT, MENU_, R_GUI, R_CTL),
     LAYOUT(
-      NUMLK, _F01_, _F02_, _F03_, _F04_, _F05_, _F06_, _____, _F07_, _F08_, _F09_, _F10_, _F11_, _F12_, PRSCR, _OFF_,
-         SCRLK, _____, _____, _____, NEXT_, VOLUP, _____, HOME_, PG_DN, PG_UP, _END_, _____, _____, _____, _____,
-            CAPLK, _____, _____, _____, PLAY_, MUTE_, /****/ LEFT_, DOWN_, _UP__, RIGHT, _____, _____, _____,
-               PAUSE, _____, _____, _____, PREV_, VOLDN, _____, _____, _____, _____, _____, _____, _____,
-                  _____, _____, _____, _DEL_, _____, XXXXX, _____, _INS_, _____, _____, _____, _____)};
+      NUMLK, _F01_, _F02_, _F03_, _F04_, _F05_, _F06_, _____, _F07_, _F08_, _F09_, _F10_, _F11_, _F12_, PRSCR, MUTE_,
+         SCRLK, _____, _____, _____, _____, _____, _____, HOME_, PG_DN, PG_UP, _END_, _____, _____, _____, _____,
+            CAPLK, _____, _____, _____, _____, _____, /****/ LEFT_, DOWN_, _UP__, RIGHT, _____, _____, _____,
+               PAUSE, _____, _____, _____, _____, _____, _____, PLAY_, NEXT_, PREV_, STOP_, _____, _____,
+                  WAKE_, SLEEP, _OFF_, _DEL_, _____, XXXXX, _____, _INS_, _____, _____, _____, _____)};
 
-  static const uint16_t kDebouncingTimeMs = 5;
+  static const uint16_t kDebouncingTimeMs = 10;
   struct KeyState {
     uint8_t Pin;
     uint16_t LastCode;
@@ -132,7 +132,7 @@ namespace Matrix {
     }
   }
 
-  void Init() {
+  void Setup() {
     // initialize the pin states
     for (uint8_t i = 0; i < kNumRows; ++i) {
       pinMode(kRowPins[i], INPUT_PULLUP);
@@ -148,7 +148,7 @@ namespace Matrix {
     }
   }
 
-  void Scan() {
+  void Loop() {
     for (uint8_t r = 0; r < kNumRows; ++r) {
       KeyState* keystate_row = gKeyStateMatrix[r];
       // set the row pin low

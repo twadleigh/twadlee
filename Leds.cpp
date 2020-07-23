@@ -26,7 +26,7 @@ namespace Leds {
     UpdateBrightnessLevel();
   }
 
-  void Init() {
+  void Setup() {
     for (int i = 0; i < kNumLedPins; ++i) {
       uint8_t pin = kLedPins[i];
       pinMode(pin, OUTPUT);
@@ -35,5 +35,5 @@ namespace Leds {
     SetBrightnessLevel(0);
   }
 
-  void Scan() {}
+  void Loop() {}
 }  // namespace Leds
