@@ -7,9 +7,9 @@
 
 namespace Leds {
   const uint8_t kNumLedPins = 5;
-  const uint8_t kLedPins[] = {5, 20, 21, 22, 23};
+  const uint8_t kLedPins[] = {3, 4, 6, 9, 10};
 
-  uint8_t gBrightnessLevel = 32;
+  uint8_t gBrightnessLevel = 64;
 
   uint8_t GetBrightnessLevel() {
     return gBrightnessLevel;
@@ -31,8 +31,7 @@ namespace Leds {
       uint8_t pin = kLedPins[i];
       pinMode(pin, OUTPUT);
     }
-//    UpdateBrightnessLevel();
-    SetBrightnessLevel(0);
+    UpdateBrightnessLevel();
   }
 
   void Loop() {}

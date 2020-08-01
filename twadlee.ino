@@ -5,14 +5,14 @@
 
 void setup() {
   Logging::Setup();
-  Matrix::Setup();
-  Thumbstick::Setup();
+  //Matrix::Setup();
+  //Thumbstick::Setup();
   Leds::Setup();
 }
 
 void loop() {
   Logging::Loop();
-  Matrix::Loop();
-  Thumbstick::Loop();
+  //Matrix::Loop();
+  //Thumbstick::Loop();
   Leds::Loop();
 }

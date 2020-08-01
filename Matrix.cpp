@@ -6,13 +6,14 @@
 
 #include "KeyDefs.h"
 #include "Logging.h"
+#include "Thumbstick.h"
 
 namespace Matrix {
   const uint8_t kNumLayers = 2;
   const uint8_t kNumCols = 16;
-  static const uint8_t kColPins[] = {0, 7, 6, 8, 28, 27, 4, 3, 2, 1, 0, 10, 20, 30, 40, 50};
+  static const uint8_t kColPins[] = {29, 30, 31, 32, 33, 15, 16, 17, 4, 3, 2, 28, 27, 26, 25, 24};
   const uint8_t kNumRows = 5;
-  static const uint8_t kRowPins[] = {9, 10, 11, 12, 14};
+  static const uint8_t kRowPins[] = {19, 20, 8, 7, 6};
 
   const uint16_t kLayout[kNumLayers][kNumRows][kNumCols] = {
     LAYOUT(
@@ -94,6 +95,7 @@ namespace Matrix {
         case MODAL_LAYER_MASK:
           gKeyStateMatrix[row][col].SetLastCode(ML(gCurrentLayer));
           gCurrentLayer = (key_code & 0xFF);
+          Thumbstick::SetScrolling();
           return;
         case TRANSPARENCY_MASK:
           if (0 == layer) {
@@ -124,6 +126,7 @@ namespace Matrix {
           return;
         case MODAL_LAYER_MASK:
           gCurrentLayer = (key_code & 0xFF);
+          Thumbstick::ClearScrolling();
           return;
         default:
           ERROR("unexpected key mask %u", key_mask);
