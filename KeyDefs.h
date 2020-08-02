@@ -66,7 +66,7 @@
 #define EQUAL KEY_EQUAL
 #define PG_UP KEY_PAGE_UP
 #define PG_DN KEY_PAGE_DOWN
-#define HOME_ KEY_HOME
+#define _HOME KEY_HOME
 #define _END_ KEY_END
 #define _TAB_ KEY_TAB
 #define L_BRC KEY_LEFT_BRACE
@@ -81,10 +81,10 @@
 #define SLASH KEY_SLASH
 #define BK_SP KEY_BACKSPACE
 #define SPACE KEY_SPACE
-#define MENU_ KEY_MENU
+#define _MENU KEY_MENU
 #define _UP__ KEY_UP
-#define DOWN_ KEY_DOWN
-#define LEFT_ KEY_LEFT
+#define _DOWN KEY_DOWN
+#define _LEFT KEY_LEFT
 #define RIGHT KEY_RIGHT
 #define _INS_ KEY_INSERT
 #define _DEL_ KEY_DELETE
@@ -94,15 +94,15 @@
 #define PRSCR KEY_PRINTSCREEN
 #define PAUSE KEY_PAUSE
 #define SLEEP KEY_SYSTEM_SLEEP
-#define WAKE_ KEY_SYSTEM_WAKE_UP
+#define _WAKE KEY_SYSTEM_WAKE_UP
 #define _OFF_ KEY_SYSTEM_POWER_DOWN
 #define VOLUP KEY_MEDIA_VOLUME_INC
 #define VOLDN KEY_MEDIA_VOLUME_DEC
-#define MUTE_ KEY_MEDIA_MUTE
-#define PLAY_ KEY_MEDIA_PLAY_PAUSE
-#define PREV_ KEY_MEDIA_PREV_TRACK
-#define NEXT_ KEY_MEDIA_NEXT_TRACK
-#define STOP_ KEY_MEDIA_STOP
+#define _MUTE KEY_MEDIA_MUTE
+#define _PLAY KEY_MEDIA_PLAY_PAUSE
+#define _PREV KEY_MEDIA_PREV_TRACK
+#define _NEXT KEY_MEDIA_NEXT_TRACK
+#define _STOP KEY_MEDIA_STOP
 
 // reserved masks:
 // 0xE0 - modifiers
@@ -111,36 +111,20 @@
 // 0xF0 - regular
 
 #define MIN_RESERVED_MASK 0xE0
+#define FIRST_RESERVED_CODE (MIN_RESERVED_MASK << 8)
 
-#define NULL_MASK 0x00
-#define XXXXX (NULL_MASK << 8)  // no key - ignore event
-
-#define TRANSPARENCY_MASK 0x01
-#define _____ (TRANSPARENCY_MASK << 8)  // transparent - look in lower layer for code
-
-#define MOUSE_BUTTON_MASK 0x02
-#define MBTNL ((MOUSE_BUTTON_MASK << 8) | MOUSE_LEFT)
-#define MBTNM ((MOUSE_BUTTON_MASK << 8) | MOUSE_MIDDLE)
-#define MBTNR ((MOUSE_BUTTON_MASK << 8) | MOUSE_RIGHT)
-#define MBTNB ((MOUSE_BUTTON_MASK << 8) | MOUSE_BACK)
-#define MBTNF ((MOUSE_BUTTON_MASK << 8) | MOUSE_FORWARD)
-
-#define MODAL_LAYER_MASK 0x03
-#define ML(n) ((MODAL_LAYER_MASK << 8) | ((uint8_t)(n)))
-
-#define LAYOUT( \
-    k_0_0, k_0_1, k_0_2, k_0_3, k_0_4, k_0_5, k_0_6, k_0_7, k_0_8, k_0_9, k_0_a, k_0_b, k_0_c, k_0_d, k_0_e, k_0_f, \
-      k_1_0, k_1_1, k_1_2, k_1_3, k_1_4, k_1_5, k_1_6, k_1_7, k_1_8, k_1_9, k_1_a, k_1_b, k_1_c, k_1_d, k_1_f, \
-        k_2_0, k_2_2, k_2_3, k_2_4, k_2_5, k_2_6, /**/ k_2_8, k_2_9, k_2_a, k_2_b, k_2_c, k_2_d, k_2_e, \
-          k_3_1, k_3_2, k_3_3, k_3_4, k_3_5, k_3_6, k_3_7, k_3_8, k_3_9, k_3_a, k_3_b, k_3_c, k_3_e, \
-            k_4_0, k_4_1, k_4_3, k_4_4, k_4_6, k_4_7, k_4_8, k_4_9, k_4_b, k_4_c, k_4_e, k_4_f \
-) \
-{ \
-    {k_0_0, k_0_1, k_0_2, k_0_3, k_0_4, k_0_5, k_0_6, k_0_7, k_0_8, k_0_9, k_0_a, k_0_b, k_0_c, k_0_d, k_0_e, k_0_f}, \
-    {k_1_0, k_1_1, k_1_2, k_1_3, k_1_4, k_1_5, k_1_6, k_1_7, k_1_8, k_1_9, k_1_a, k_1_b, k_1_c, k_1_d, XXXXX, k_1_f}, \
-    {k_2_0, XXXXX, k_2_2, k_2_3, k_2_4, k_2_5, k_2_6, XXXXX, k_2_8, k_2_9, k_2_a, k_2_b, k_2_c, k_2_d, k_2_e, XXXXX}, \
-    {XXXXX, k_3_1, k_3_2, k_3_3, k_3_4, k_3_5, k_3_6, k_3_7, k_3_8, k_3_9, k_3_a, k_3_b, k_3_c, XXXXX, k_3_e, XXXXX}, \
-    {k_4_0, k_4_1, XXXXX, k_4_3, k_4_4, XXXXX, k_4_6, k_4_7, k_4_8, k_4_9, XXXXX, k_4_b, k_4_c, XXXXX, k_4_e, k_4_f} \
-}
+// special key codes
+#define XXXXX 0x00  // no key - ignore event
+#define _____ 0x01  // transparent - look in lower layer for code
+#define MBTNL 0x02
+#define MBTNM 0x03
+#define MBTNR 0x04
+#define MBTNB 0x05
+#define MBTNF 0x06
+#define RAISE 0x07
+#define LEDUP 0x08
+#define LEDDN 0x09
+#define LEDMN 0x0A
+#define LEDMX 0x0B
 
 #endif // __KEYDEFS_H_

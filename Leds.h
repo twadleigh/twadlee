@@ -7,10 +7,13 @@ namespace Leds {
   void Setup();
   void Loop();
 
-  extern const uint8_t kMaxBrightnessLevel;
-  uint8_t GetBrightnessLevel();
-  void SetBrightnessLevel(uint8_t level);
+  uint8_t GetBrightness();
+  void SetBrightness(uint8_t level);
+  void SetMinBrightness();
+  void SetMaxBrightness();
+  void IncreaseBrightness();
+  void DecreaseBrightness();
 
-  void Animate(uint8_t id);
+  //void Animate(uint8_t id);
 }  // namespace Leds
 #endif // __LEDS_H_

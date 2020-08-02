@@ -12,30 +12,46 @@ namespace Logging {
 
   void Loop() {}
 
-  static void vMsg(const char* format, va_list args) {
-    char buf[2048];
-    vsprintf(buf, format, args);
-    Serial.println(buf);
+  uint8_t gVerbosity = _LOGGING_INFO;
+
+  uint8_t GetVerbosity() {
+    return gVerbosity;
   }
 
-  void Msg(const char* format, ...) {
+  void SetVerbosity(uint8_t verbosity) {
+    verbosity = max(min(verbosity, _LOGGING_MAX_VERBOSITY), _LOGGING_SILENT);
+    if (verbosity != gVerbosity) {
+      INFO("Verbosity changing from %u to %u", gVerbosity, verbosity);
+      gVerbosity = verbosity;
+    }
+  }
+
+  static void vPrint(const char* format, va_list args) {
+    char buf[2048];
+    vsprintf(buf, format, args);
+    Serial.print(buf);
+  }
+
+  void Print(const char* format, ...) {
     va_list args;
     va_start(args, format);
-    vMsg(format, args);
+    vPrint(format, args);
     va_end(args);
   }
 
-  void Log(const char* level,
+  void Log(uint8_t level,
+           const char* label,
            const char* file,
            int line,
            const char* format, ...) {
-    double time = 0.001*millis();
-    Msg("+vvv %s vvv %s:%i", level, file, line);
-    Serial.print("> ");
-    va_list args;
-    va_start(args, format);
-    vMsg(format, args);
-    va_end(args);
-    Msg("+^^^ %s ^^^ %f", level, time);
+    if (level <= gVerbosity) {
+      double time = 0.001*millis();
+      Print("[%10.3f s] %s: ", time, label);
+      va_list args;
+      va_start(args, format);
+      vPrint(format, args);
+      va_end(args);
+      Print(" @ %s:%u\n", file, line);
+    }
   }
 }  // namespace Logging
