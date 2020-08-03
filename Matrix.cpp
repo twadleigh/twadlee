@@ -66,7 +66,11 @@ namespace Matrix {
     }
 
     uint8_t ClearLastLayer() {
-      uint8_t layer = LastLayer;
+      if (0 == LastLayer) {
+        ERROR("Null last layer for key release event");
+        return 0;
+      }
+      uint8_t layer = LastLayer - 1;
       LastLayer = 0;
       return layer;
     }
