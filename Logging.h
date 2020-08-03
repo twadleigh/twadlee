@@ -20,8 +20,10 @@ namespace Logging {
 
   void SetVerbosity(uint8_t);
   uint8_t GetVerbosity();
-  inline void Silence() { SetVerbosity(_LOGGING_SILENT); }
-  inline void SetMaxVerbosity() { SetVerbosity(_LOGGING_MAX_VERBOSITY); }
+  void SetMinVerbosity();
+  void SetMaxVerbosity();
+  void IncreaseVerbosity();
+  void DecreaseVerbosity();
 
   // not ISR-safe
   void Print(const char* msg, ...);

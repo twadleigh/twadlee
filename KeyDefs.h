@@ -126,5 +126,9 @@
 #define LEDDN 0x09
 #define LEDMN 0x0A
 #define LEDMX 0x0B
+#define LOGUP 0x0C
+#define LOGDN 0x0D
+#define LOGMX 0x0E
+#define LOGMN 0x0F
 
 #endif // __KEYDEFS_H_

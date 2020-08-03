@@ -1,7 +1,7 @@
 # brightness table
 
 const max_pwm = 256
-const num_intervals = 50
+const num_intervals = 30
 
 # brightness to luminance
 function finv(t)

@@ -39,8 +39,8 @@ namespace Matrix {
       NUMLK, _F01_, _F02_, _F03_, _F04_, _F05_, _F06_, _____, _F07_, _F08_, _F09_, _F10_, _F11_, _F12_, PRSCR, _MUTE,
          SCRLK, _____, _____, _____, _____, _____, _____, _HOME, PG_DN, PG_UP, _END_, _____, _____, _____, _____,
             CAPLK, _____, _____, _____, _____, _____, /****/ _LEFT, _DOWN, _UP__, RIGHT, _____, _____, _____,
-               PAUSE, _____, _____, _____, _____, _____, _____, _PLAY, _NEXT, _PREV, _STOP, _____, _____,
-                  _WAKE, SLEEP, _OFF_, _DEL_, _____, XXXXX, _____, _INS_, LEDMN, LEDMX, LEDDN, LEDUP)};
+               PAUSE, SLEEP, _OFF_, _____, _____, _____, _____, _PLAY, _NEXT, _PREV, _STOP, _____, _____,
+                  _WAKE, LOGDN, LOGUP, _DEL_, _____, XXXXX, _____, _INS_, LEDMN, LEDMX, LEDDN, LEDUP)};
 
   static const uint16_t kDebouncingTimeMs = 10;
   struct KeyState {
@@ -140,6 +140,18 @@ namespace Matrix {
           case LEDDN:
             Leds::DecreaseBrightness();
             return;
+          case LOGUP:
+            Logging::IncreaseVerbosity();
+            return;
+          case LOGDN:
+            Logging::DecreaseVerbosity();
+            return;
+          case LOGMX:
+            Logging::SetMaxVerbosity();
+            return;
+          case LOGMN:
+            Logging::SetMinVerbosity();
+            return;
           case XXXXX:
             return;
           default:
@@ -184,6 +196,14 @@ namespace Matrix {
         case LEDUP:
           return;
         case LEDDN:
+          return;
+        case LOGUP:
+          return;
+        case LOGDN:
+          return;
+        case LOGMX:
+          return;
+        case LOGMN:
           return;
         case XXXXX:
           return;

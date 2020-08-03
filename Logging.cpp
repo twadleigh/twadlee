@@ -19,11 +19,27 @@ namespace Logging {
   }
 
   void SetVerbosity(uint8_t verbosity) {
-    verbosity = max(min(verbosity, _LOGGING_MAX_VERBOSITY), _LOGGING_SILENT);
+    verbosity = min(verbosity, _LOGGING_MAX_VERBOSITY);
     if (verbosity != gVerbosity) {
       INFO("Verbosity changing from %u to %u", gVerbosity, verbosity);
       gVerbosity = verbosity;
     }
+  }
+
+  void SetMinVerbosity() {
+    SetVerbosity(_LOGGING_SILENT);
+  }
+
+  void SetMaxVerbosity() {
+    SetVerbosity(_LOGGING_MAX_VERBOSITY);
+  }
+
+  void IncreaseVerbosity() {
+    SetVerbosity(gVerbosity + 1);
+  }
+
+  void DecreaseVerbosity() {
+    if (gVerbosity > _LOGGING_SILENT) SetVerbosity(gVerbosity-1);
   }
 
   static void vPrint(const char* format, va_list args) {
